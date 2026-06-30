@@ -21,11 +21,8 @@ export async function register(req: Request, res: Response) {
     const existing = await User.findOne({ email });
     if (existing) return res.status(409).json({ status: 'error', message: 'Email already registered' });
 
-    // Hash password
-    const hashed = await bcrypt.hash(password, 12);
-
     // Create user
-    const user = await User.create({ name, email, password: hashed, role, verified: false });
+    const user = await User.create({ name, email, password, role, verified: false });
 
     // Create role-specific profile
     if (role === 'student') {
@@ -114,10 +111,12 @@ export async function login(req: Request, res: Response) {
     const token = jwt.sign({ userId: user._id, role: user.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
     const refreshToken = jwt.sign({ userId: user._id, role: user.role }, config.jwtRefreshSecret, { expiresIn: config.jwtRefreshExpiresIn });
 
+    const sameSite = process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const;
+    const sameSite = process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const;
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none' as const,
+      sameSite,
       maxAge: 1000 * 60 * 15
     };
     const refreshOptions = {
@@ -161,5 +160,34 @@ export function refreshToken(req: Request, res: Response) {
     res.json({ status: 'success', message: 'Token refreshed' });
   } catch (error) {
     res.status(401).json({ status: 'error', message: 'Invalid refresh token' });
+  }
+}
+
+export async function getMe(req: Request, res: Response) {
+  try {
+    const userId = (req as any).user?._id;
+    if (!userId) {
+      return res.status(401).json({ status: 'error', message: 'Not authenticated' });
+    }
+
+    const user = await User.findById(userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+    }
+
+    res.json({
+      status: 'success',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch user' });
   }
 }

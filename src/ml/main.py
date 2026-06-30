@@ -67,6 +67,13 @@ async def load_model():
         await train_model_internal()
 
 async def get_dataset() -> pd.DataFrame:
+    dataset_path = os.path.join(os.path.dirname(__file__), 'ucid_student_scores.csv')
+    if os.path.exists(dataset_path):
+        df = pd.read_csv(dataset_path)
+        if 'risk' in df.columns:
+            df['risk'] = df['risk'].map({'Low': 0, 'Medium': 1, 'High': 2})
+        return df
+
     rng = np.random.default_rng(42)
     rows = 300
     data = {

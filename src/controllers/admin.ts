@@ -108,13 +108,10 @@ export async function createUser(req: AuthRequest, res: Response) {
       return res.status(409).json({ status: 'error', message: 'Email already registered' });
     }
 
-    const bcrypt = await import('bcrypt');
-    const hashed = await bcrypt.default.hash(password, 12);
-
     const user = await User.create({
       name,
       email,
-      password: hashed,
+      password,
       role,
       isActive: true
     });

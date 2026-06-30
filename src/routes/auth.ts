@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { register, login, logout, refreshToken } from '../controllers/auth';
+import { register, login, logout, refreshToken, getMe } from '../controllers/auth';
 import { validateRequest } from '../middleware/validate-request';
 import { authMiddleware } from '../middleware/auth';
 
@@ -21,5 +21,6 @@ router.post('/login', [
 
 router.post('/logout', authMiddleware, logout);
 router.get('/refresh', refreshToken);
+router.get('/me', authMiddleware, getMe);
 
 export default router;
