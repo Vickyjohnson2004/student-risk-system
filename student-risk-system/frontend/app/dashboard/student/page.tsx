@@ -35,18 +35,26 @@ interface StudentData {
   };
 }
 
+interface StudentDashboardResponse {
+  status: string;
+  data: StudentData;
+}
+
 export default function StudentDashboard() {
   const router = useRouter();
-  const { data, error, isLoading } = useQuery({
+  const { data, error, isLoading, isError } = useQuery({
     queryKey: ['studentDashboard'],
     queryFn: fetchStudentDashboard,
-    retry: false,
-    onError: () => {
-      router.push('/login');
-    }
+    retry: false
   });
 
-  const student = data?.data as StudentData | undefined;
+  useEffect(() => {
+    if (error) {
+      router.push('/login');
+    }
+  }, [error, router]);
+
+  const student = (data as StudentDashboardResponse | undefined)?.data;
 
   if (isLoading) {
     return (
@@ -59,15 +67,7 @@ export default function StudentDashboard() {
     );
   }
 
-  if (!student) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>No dashboard data available</p>
-      </div>
-    );
-  }
-
-  if (!student) {
+  if (isError || !student) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>No dashboard data available</p>
