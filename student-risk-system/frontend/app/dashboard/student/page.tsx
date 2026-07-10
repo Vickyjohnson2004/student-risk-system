@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { fetchStudentDashboard } from '@/lib/api';
+import { fetchStudentDashboard } from '../../../lib/api';
 
 interface StudentData {
   studentId: string;

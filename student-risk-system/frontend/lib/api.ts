@@ -1,56 +1,76 @@
-const rawBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-export const apiBaseUrl = rawBase.endsWith('/api') ? rawBase.replace(/\/$/, '') : rawBase.replace(/\/$/, '') + '/api';
+import axiosInstance from "./axios";
+import { AxiosError, AxiosRequestConfig } from "axios";
 
-async function handleResponse(response: Response) {
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    const message = data?.message || data?.error || response.statusText;
-    throw new Error(message || 'API request failed');
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+async function refreshAccessToken() {
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
   }
-  return data;
+
+  isRefreshing = true;
+  refreshPromise = axiosInstance.get('/auth/refresh')
+    .then(() => true)
+    .catch(() => false)
+    .finally(() => {
+      isRefreshing = false;
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+}
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean } | undefined;
+    const requestUrl = originalRequest?.url ?? '';
+
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !requestUrl.includes('/auth/login') &&
+      !requestUrl.includes('/auth/register') &&
+      !requestUrl.includes('/auth/refresh')
+    ) {
+      originalRequest._retry = true;
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        return axiosInstance.request(originalRequest);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+async function request<T = any>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', endpoint: string, body?: any) {
+  const response = await axiosInstance.request<T>({
+    url: endpoint.startsWith('/') ? endpoint : `/${endpoint}`,
+    method,
+    data: body
+  });
+
+  return response.data;
 }
 
 export const api = {
-  async get(endpoint: string) {
-    const url = endpoint.startsWith('/') ? `${apiBaseUrl}${endpoint}` : `${apiBaseUrl}/${endpoint}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
-    });
-    return handleResponse(response);
+  async get<T = any>(endpoint: string) {
+    return request<T>('GET', endpoint);
   },
 
-  async post(endpoint: string, body?: any) {
-    const url = endpoint.startsWith('/') ? `${apiBaseUrl}${endpoint}` : `${apiBaseUrl}/${endpoint}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: body ? JSON.stringify(body) : undefined
-    });
-    return handleResponse(response);
+  async post<T = any>(endpoint: string, body?: any) {
+    return request<T>('POST', endpoint, body);
   },
 
-  async put(endpoint: string, body?: any) {
-    const url = endpoint.startsWith('/') ? `${apiBaseUrl}${endpoint}` : `${apiBaseUrl}/${endpoint}`;
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: body ? JSON.stringify(body) : undefined
-    });
-    return handleResponse(response);
+  async put<T = any>(endpoint: string, body?: any) {
+    return request<T>('PUT', endpoint, body);
   },
 
-  async delete(endpoint: string) {
-    const url = endpoint.startsWith('/') ? `${apiBaseUrl}${endpoint}` : `${apiBaseUrl}/${endpoint}`;
-    const response = await fetch(url, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
-    });
-    return handleResponse(response);
+  async delete<T = any>(endpoint: string) {
+    return request<T>('DELETE', endpoint);
   }
 };
 
@@ -63,7 +83,13 @@ export async function registerUser(body: { name: string; email: string; password
 }
 
 export async function logoutUser() {
-  return api.post('/auth/logout');
+  try {
+    return await api.post('/auth/logout');
+  } finally {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user');
+    }
+  }
 }
 
 export async function getCurrentUser() {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueries } from '@tanstack/react-query';
-import { fetchAdminDashboard, fetchAdminUsers, api } from '@/lib/api';
+import { fetchAdminDashboard, fetchAdminUsers, api } from '../../../lib/api';
 
 interface AdminData {
   adminId: string;
