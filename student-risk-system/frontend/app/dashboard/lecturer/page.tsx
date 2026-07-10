@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueries } from '@tanstack/react-query';
-import { fetchLecturerDashboard, fetchLecturerStudents } from '../../../lib/api';
+import { fetchLecturerDashboard, fetchLecturerStudents, fetchMlDatasetPredictions } from '../../../lib/api';
 
 interface LecturerData {
   lecturerId: string;
@@ -36,9 +36,16 @@ interface StudentItem {
   attendancePercentage: number;
 }
 
+interface DatasetPredictionSummary {
+  total: number;
+  Low: number;
+  Medium: number;
+  High: number;
+}
+
 export default function LecturerDashboard() {
   const router = useRouter();
-  const [dashboardQuery, studentsQuery] = useQueries({
+  const [dashboardQuery, studentsQuery, datasetQuery] = useQueries({
     queries: [
       {
         queryKey: ['lecturerDashboard'],
@@ -48,6 +55,11 @@ export default function LecturerDashboard() {
       {
         queryKey: ['lecturerStudents'],
         queryFn: fetchLecturerStudents,
+        retry: false
+      },
+      {
+        queryKey: ['datasetPredictions'],
+        queryFn: fetchMlDatasetPredictions,
         retry: false
       }
     ]
@@ -61,7 +73,8 @@ export default function LecturerDashboard() {
 
   const lecturer = dashboardQuery.data?.data as LecturerData | undefined;
   const students = studentsQuery.data?.data?.students as StudentItem[] | undefined;
-  const isLoading = dashboardQuery.isLoading || studentsQuery.isLoading;
+  const datasetSummary = datasetQuery.data?.data?.summary as DatasetPredictionSummary | undefined;
+  const isLoading = dashboardQuery.isLoading || studentsQuery.isLoading || datasetQuery.isLoading;
   const studentsList = students ?? [];
 
   if (isLoading) {
@@ -118,6 +131,23 @@ export default function LecturerDashboard() {
             <p className="text-4xl font-bold text-green-600">{lecturer.statistics.coursesTeaching}</p>
           </div>
         </div>
+
+        {datasetSummary && (
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-indigo-500">
+              <p className="text-gray-600 text-sm mb-2">Dataset Total Rows</p>
+              <p className="text-4xl font-bold text-indigo-600">{datasetSummary.total}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
+              <p className="text-gray-600 text-sm mb-2">Predicted Medium Risk</p>
+              <p className="text-4xl font-bold text-yellow-600">{datasetSummary.Medium}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500">
+              <p className="text-gray-600 text-sm mb-2">Predicted High Risk</p>
+              <p className="text-4xl font-bold text-red-600">{datasetSummary.High}</p>
+            </div>
+          </div>
+        )}
 
         {/* Profile Information */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">

@@ -115,3 +115,7 @@ export async function fetchAdminDashboard() {
 export async function fetchAdminUsers() {
   return api.get('/admin/users');
 }
+
+export async function fetchMlDatasetPredictions() {
+  return api.get('/ml/dataset');
+}
