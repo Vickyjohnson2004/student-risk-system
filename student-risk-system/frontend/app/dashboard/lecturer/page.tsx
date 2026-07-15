@@ -65,11 +65,16 @@ export default function LecturerDashboard() {
     ]
   });
 
+  // Only redirect to login on real auth failures (401/403), not any error.
+  const authError = [dashboardQuery.error, studentsQuery.error, datasetQuery.error].some(
+    (err: any) => err?.response?.status === 401 || err?.response?.status === 403
+  );
+
   useEffect(() => {
-    if (dashboardQuery.error || studentsQuery.error) {
+    if (authError) {
       router.push('/login');
     }
-  }, [dashboardQuery.error, studentsQuery.error, router]);
+  }, [authError, router]);
 
   const lecturer = dashboardQuery.data?.data as LecturerData | undefined;
   const students = studentsQuery.data?.data?.students as StudentItem[] | undefined;

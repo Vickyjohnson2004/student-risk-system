@@ -73,24 +73,44 @@ export function MainNav() {
                   </Link>
                 )}
                 {user.role === 'lecturer' && (
-                  <Link
-                    href="/dashboard/lecturer"
-                    className={`px-4 py-2 rounded-lg transition ${
-                      isActive('/dashboard/lecturer') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    Lecturer Dashboard
-                  </Link>
+                  <>
+                    <Link
+                      href="/dashboard/lecturer"
+                      className={`px-4 py-2 rounded-lg transition ${
+                        isActive('/dashboard/lecturer') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      Lecturer Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/ml"
+                      className={`px-4 py-2 rounded-lg transition ${
+                        isActive('/dashboard/ml') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      ML Dataset
+                    </Link>
+                  </>
                 )}
                 {user.role === 'admin' && (
-                  <Link
-                    href="/dashboard/admin"
-                    className={`px-4 py-2 rounded-lg transition ${
-                      isActive('/dashboard/admin') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    Admin Dashboard
-                  </Link>
+                  <>
+                    <Link
+                      href="/dashboard/admin"
+                      className={`px-4 py-2 rounded-lg transition ${
+                        isActive('/dashboard/admin') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      Admin Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/ml"
+                      className={`px-4 py-2 rounded-lg transition ${
+                        isActive('/dashboard/ml') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      ML Dataset
+                    </Link>
+                  </>
                 )}
 
                 <div className="flex items-center gap-3 pl-6 border-l border-gray-200">
@@ -167,22 +187,40 @@ export function MainNav() {
                   </Link>
                 )}
                 {user.role === 'lecturer' && (
-                  <Link
-                    href="/dashboard/lecturer"
-                    className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Lecturer Dashboard
-                  </Link>
+                  <>
+                    <Link
+                      href="/dashboard/lecturer"
+                      className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Lecturer Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/ml"
+                      className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      ML Dataset
+                    </Link>
+                  </>
                 )}
                 {user.role === 'admin' && (
-                  <Link
-                    href="/dashboard/admin"
-                    className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Admin Dashboard
-                  </Link>
+                  <>
+                    <Link
+                      href="/dashboard/admin"
+                      className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Admin Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/ml"
+                      className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      ML Dataset
+                    </Link>
+                  </>
                 )}
 
                 <div className="pt-3 border-t border-gray-200">

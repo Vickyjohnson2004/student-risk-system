@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueries } from '@tanstack/react-query';
-import { fetchAdminDashboard, fetchAdminUsers, api } from '../../../lib/api';
+import { fetchAdminDashboard, fetchAdminUsers, fetchMlDatasetPredictions, api } from '../../../lib/api';
 
 interface AdminData {
   adminId: string;
@@ -37,10 +37,17 @@ interface User {
   createdAt: string;
 }
 
+interface DatasetPredictionSummary {
+  total: number;
+  Low: number;
+  Medium: number;
+  High: number;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [userFilter, setUserFilter] = useState('all');
-  const [dashboardQuery, usersQuery] = useQueries({
+  const [dashboardQuery, usersQuery, datasetQuery] = useQueries({
     queries: [
       {
         queryKey: ['adminDashboard'],
@@ -51,19 +58,31 @@ export default function AdminDashboard() {
         queryKey: ['adminUsers'],
         queryFn: fetchAdminUsers,
         retry: false
+      },
+      {
+        queryKey: ['mlDatasetPredictions'],
+        queryFn: fetchMlDatasetPredictions,
+        retry: false
       }
     ]
   });
 
+  // Only redirect to login when the session is actually invalid (401/403).
+  // A failing secondary query (e.g. ML dataset) must not kick an admin out.
+  const authError = [dashboardQuery.error, usersQuery.error, datasetQuery.error].some(
+    (err: any) => err?.response?.status === 401 || err?.response?.status === 403
+  );
+
   useEffect(() => {
-    if (dashboardQuery.error || usersQuery.error) {
+    if (authError) {
       router.push('/login');
     }
-  }, [dashboardQuery.error, usersQuery.error, router]);
+  }, [authError, router]);
 
   const admin = dashboardQuery.data?.data as AdminData | undefined;
   const users = usersQuery.data?.data?.users as User[] | undefined;
-  const isLoading = dashboardQuery.isLoading || usersQuery.isLoading;
+  const datasetSummary = datasetQuery.data?.data?.summary as DatasetPredictionSummary | undefined;
+  const isLoading = dashboardQuery.isLoading || usersQuery.isLoading || datasetQuery.isLoading;
 
   const [usersList, setUsers] = useState<User[]>([]);
 
@@ -107,7 +126,21 @@ export default function AdminDashboard() {
   if (!admin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>No dashboard data available</p>
+        <div className="text-center">
+          <p className="text-gray-700 mb-4">
+            {dashboardQuery.error
+              ? 'Failed to load admin dashboard. Please try again.'
+              : 'No dashboard data available'}
+          </p>
+          {dashboardQuery.error && (
+            <button
+              onClick={() => dashboardQuery.refetch()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -151,6 +184,23 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {datasetSummary && (
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-indigo-500">
+              <p className="text-gray-600 text-sm mb-2">Dataset Total Rows</p>
+              <p className="text-4xl font-bold text-indigo-600">{datasetSummary.total}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
+              <p className="text-gray-600 text-sm mb-2">Predicted Medium Risk</p>
+              <p className="text-4xl font-bold text-yellow-600">{datasetSummary.Medium}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500">
+              <p className="text-gray-600 text-sm mb-2">Predicted High Risk</p>
+              <p className="text-4xl font-bold text-red-600">{datasetSummary.High}</p>
+            </div>
+          </div>
+        )}
+
         {/* Permissions */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">
           <h3 className="text-xl font-bold mb-4 text-gray-900">Your Permissions</h3>
@@ -167,7 +217,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Users Management */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div id="users" className="bg-white p-6 rounded-lg shadow-md scroll-mt-32">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-gray-900">User Management</h3>
             <select
@@ -195,8 +245,12 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {usersList.length > 0 ? (
-                  usersList.map((user) => (
+                {(() => {
+                  const filteredUsers = userFilter === 'all'
+                    ? usersList
+                    : usersList.filter((u) => u.role === userFilter);
+                  return filteredUsers.length > 0 ? (
+                  filteredUsers.map((user) => (
                     <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 font-medium text-gray-900">{user.name}</td>
                       <td className="py-3 text-gray-600">{user.email}</td>
@@ -236,7 +290,8 @@ export default function AdminDashboard() {
                       No users found
                     </td>
                   </tr>
-                )}
+                );
+                })()}
               </tbody>
             </table>
           </div>

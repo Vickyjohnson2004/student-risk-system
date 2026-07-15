@@ -20,12 +20,19 @@ A full-stack production-ready student risk prediction and intervention platform 
    cd ../backend
    npm install
    ```
-3. Copy `.env.example` to `.env` and set values.
-4. Start backend server:
+3. Install Python dependencies for the ML service:
+   ```bash
+   cd backend
+   python -m venv .venv
+   .venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+4. Copy `.env.example` to `.env` in `backend/` and set values.
+5. Start backend server:
    ```bash
    npm run dev
    ```
-5. Start ML service:
+6. Start ML service:
    ```bash
    npm run ml
    ```
