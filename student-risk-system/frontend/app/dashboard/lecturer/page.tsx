@@ -348,10 +348,10 @@ export default function LecturerDashboard() {
                       {prediction.riskLevel}
                     </span>
                     <span className="text-gray-700 dark:text-slate-300">
-                      Probability: <span className="font-semibold">{(prediction.riskProbability * 100).toFixed(1)}%</span>
+                      Probability: <span className="font-semibold">{prediction.riskProbability.toFixed(1)}%</span>
                     </span>
                     <span className="text-gray-700 dark:text-slate-300">
-                      Confidence: <span className="font-semibold">{(prediction.confidence * 100).toFixed(1)}%</span>
+                      Confidence: <span className="font-semibold">{prediction.confidence.toFixed(1)}%</span>
                     </span>
                   </div>
                 </div>
