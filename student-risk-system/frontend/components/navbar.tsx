@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Menu, X, LogOut, Home, LogIn, UserPlus } from 'lucide-react';
+import { ThemeToggle } from './theme-toggle';
 
 export function MainNav() {
   const [user, setUser] = useState<any>(null);
@@ -40,11 +41,11 @@ export function MainNav() {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50 dark:bg-slate-950 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700">
+          <Link href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700 dark:text-sky-400 dark:hover:text-sky-300">
             UniPort
           </Link>
 
@@ -53,12 +54,14 @@ export function MainNav() {
             <Link
               href="/"
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
-                isActive('/') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                isActive('/') ? 'bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-sky-400' : 'text-gray-600 hover:bg-gray-50 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
             >
               <Home size={18} />
               Home
             </Link>
+
+            <ThemeToggle />
 
             {user ? (
               <>
@@ -156,7 +159,7 @@ export function MainNav() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
+            className="md:hidden p-2 hover:bg-gray-100 rounded-lg dark:hover:bg-slate-800 dark:text-slate-200"
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -164,7 +167,10 @@ export function MainNav() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-gray-200 space-y-3">
+          <div className="md:hidden mt-4 pt-4 border-t border-gray-200 space-y-3 dark:border-slate-800">
+            <div className="px-4">
+              <ThemeToggle />
+            </div>
             <Link
               href="/"
               className={`block px-4 py-2 rounded-lg transition ${

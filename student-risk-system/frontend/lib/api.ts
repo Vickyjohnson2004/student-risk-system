@@ -108,6 +108,39 @@ export async function fetchLecturerStudents() {
   return api.get('/lecturer/students');
 }
 
+export async function searchLecturerStudents(q: string) {
+  return api.get(`/lecturer/students/search?q=${encodeURIComponent(q)}`);
+}
+
+export interface RiskPredictionInput {
+  attendancePercentage: number;
+  assignmentAverage: number;
+  quizAverage: number;
+  midSemesterScore: number;
+  previousGPA: number;
+  currentGPA: number;
+  studyHours: number;
+  participation: number;
+  libraryVisits: number;
+  lateSubmissionCount: number;
+  disciplinaryRecord: number;
+  lmsActivity: number;
+  courseLoad: number;
+  sleepHours: number;
+  stressLevel: number;
+}
+
+export async function predictStudentRisk(input: RiskPredictionInput) {
+  return api.post('/ml/predict', input);
+}
+
+export async function markStudentOutreach(
+  studentUserId: string,
+  body: { reachedOut: boolean; reachedOutNote?: string }
+) {
+  return api.put(`/admin/students/${studentUserId}/outreach`, body);
+}
+
 export async function fetchAdminDashboard() {
   return api.get('/admin/dashboard');
 }
