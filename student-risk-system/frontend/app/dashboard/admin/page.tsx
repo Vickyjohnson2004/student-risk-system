@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueries } from '@tanstack/react-query';
-import { fetchAdminDashboard, fetchAdminUsers, fetchMlDatasetPredictions, markStudentOutreach, api } from '../../../lib/api';
+import { fetchAdminDashboard, fetchAdminUsers, fetchMlDatasetPredictions, markStudentOutreach, updateStudentLevel, api } from '../../../lib/api';
 
 interface AdminData {
   adminId: string;
@@ -36,6 +36,7 @@ interface User {
   isActive: boolean;
   createdAt: string;
   reachedOut?: boolean;
+  level?: string | null;
 }
 
 interface DatasetPredictionSummary {
@@ -126,6 +127,19 @@ export default function AdminDashboard() {
       setUsers((prev) => prev.map((u) => (u._id === user._id ? { ...u, reachedOut: false } : u)));
     } catch (err) {
       alert('Failed to update outreach status');
+    }
+  };
+
+  const handleLevelChange = async (user: User, level: string) => {
+    const previous = user.level;
+    // optimistic update
+    setUsers((prev) => prev.map((u) => (u._id === user._id ? { ...u, level } : u)));
+    try {
+      await updateStudentLevel(user._id, level as '100' | '200' | '300' | '400');
+    } catch (err) {
+      // revert on failure
+      setUsers((prev) => prev.map((u) => (u._id === user._id ? { ...u, level: previous } : u)));
+      alert('Failed to update student level');
     }
   };
 
@@ -256,6 +270,7 @@ export default function AdminDashboard() {
                   <th className="pb-3 font-semibold text-gray-900 dark:text-white">Name</th>
                   <th className="pb-3 font-semibold text-gray-900 dark:text-white">Email</th>
                   <th className="pb-3 font-semibold text-gray-900 dark:text-white">Role</th>
+                  <th className="pb-3 font-semibold text-gray-900 dark:text-white">Level</th>
                   <th className="pb-3 font-semibold text-gray-900 dark:text-white">Status</th>
                   <th className="pb-3 font-semibold text-gray-900 dark:text-white">Joined</th>
                   <th className="pb-3 font-semibold text-gray-900 dark:text-white">Actions</th>
@@ -282,6 +297,26 @@ export default function AdminDashboard() {
                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 capitalize dark:bg-blue-500/20 dark:text-blue-300">
                           {user.role}
                         </span>
+                      </td>
+                      <td className="py-3">
+                        {user.role === 'student' ? (
+                          admin.permissions.canManageStudents || admin.permissions.canEditSystem ? (
+                            <select
+                              value={user.level || '100'}
+                              onChange={(e) => handleLevelChange(user, e.target.value)}
+                              className="px-2 py-1 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                            >
+                              <option value="100">100L</option>
+                              <option value="200">200L</option>
+                              <option value="300">300L</option>
+                              <option value="400">400L</option>
+                            </select>
+                          ) : (
+                            <span className="text-gray-700 dark:text-slate-300">{(user.level || '100')}L</span>
+                          )
+                        ) : (
+                          <span className="text-gray-400 dark:text-slate-600">—</span>
+                        )}
                       </td>
                       <td className="py-3">
                         <button
@@ -362,7 +397,7 @@ export default function AdminDashboard() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-gray-600 dark:text-slate-400">
+                    <td colSpan={7} className="py-8 text-center text-gray-600 dark:text-slate-400">
                       No users found
                     </td>
                   </tr>

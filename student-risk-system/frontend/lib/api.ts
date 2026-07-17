@@ -141,6 +141,13 @@ export async function markStudentOutreach(
   return api.put(`/admin/students/${studentUserId}/outreach`, body);
 }
 
+export async function updateStudentLevel(
+  studentUserId: string,
+  level: '100' | '200' | '300' | '400'
+) {
+  return api.put(`/admin/students/${studentUserId}/level`, { level });
+}
+
 export async function fetchAdminDashboard() {
   return api.get('/admin/dashboard');
 }
